@@ -1,3 +1,8 @@
+import pandas as pd
+import geopandas as gpd
+import numpy as np
+import warnings
+
 def reset_index_rename(df):
     df_columns = df.columns
     df_columns = df_columns.insert(0,'id')
@@ -36,4 +41,19 @@ def compute_matching_matrix(df_a, df_b, id_a=None, id_b=None, reverse=False):
     tmp_overlay['ratio'] = tmp_overlay['area']/tmp_overlay['total_area']
     matching_ratio_matrix = tmp_overlay.pivot(index=id_to, columns=id_from, values='ratio')
     #id_to is the target geography: it will be the index of the matching table
+    matching_ratio_matrix = matching_ratio_matrix.fillna(0)
     return matching_ratio_matrix
+
+class CustomError(Exception):
+    pass
+
+def generate_updated_values(matching_matrix, value_table, orient='index'):
+    if not (matching_matrix.columns.all()==value_table.index.all()):
+        raise CustomError("Columns of the matching matrix don't match with rows of value table.")
+    df = pd.DataFrame(index=matching_matrix.index)
+    for col in value_table.columns:
+        vals = np.array(value_table[col])
+        if (vals.dtype!=float) and (vals.dtype!=int):
+            warnings.warn(f'The column {col} is not in numeric format.')
+        df[col]=matching_matrix.apply(lambda x: np.floor(np.dot(x,vals)), axis=1)
+    return df
