@@ -37,7 +37,7 @@ def compute_matching_matrix(df_a, df_b, id_a=None, id_b=None, reverse=False):
         id_to = id_b
     tmp_overlay = gpd.overlay(df_a, df_b)
     tmp_overlay['area']= tmp_overlay.area
-    tmp_overlay = tmp_overlay.merge(tmp_overlay.groupby(id_to).sum().rename(columns={'area':'total_area'}).reset_index(), on=id_to)
+    tmp_overlay = tmp_overlay.merge(tmp_overlay.groupby(id_from).sum().rename(columns={'area':'total_area'}).reset_index(), on=id_from)
     tmp_overlay['ratio'] = tmp_overlay['area']/tmp_overlay['total_area']
     matching_ratio_matrix = tmp_overlay.pivot(index=id_to, columns=id_from, values='ratio')
     #id_to is the target geography: it will be the index of the matching table
@@ -55,5 +55,5 @@ def generate_updated_values(matching_matrix, value_table, orient='index'):
         vals = np.array(value_table[col])
         if (vals.dtype!=float) and (vals.dtype!=int):
             warnings.warn(f'The column {col} is not in numeric format.')
-        df[col]=matching_matrix.apply(lambda x: np.floor(np.dot(x,vals)), axis=1)
+        df[col]=matching_matrix.apply(lambda x: np.dot(x,vals), axis=1)
     return df
