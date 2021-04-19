@@ -36,7 +36,7 @@ def compute_matching_matrix(df_a, df_b, id_a=None, id_b=None, reverse=False):
         id_from = id_a
         id_to = id_b
     tmp_overlay = gpd.overlay(df_a, df_b)
-    tmp_overlay['area']= tmp_overlay.area
+    tmp_overlay['area']= tmp_overlay.to_crs(epsg=3310).area
     tmp_overlay = tmp_overlay.merge(tmp_overlay.groupby(id_from).sum().rename(columns={'area':'total_area'}).reset_index(), on=id_from)
     tmp_overlay['ratio'] = tmp_overlay['area']/tmp_overlay['total_area']
     matching_ratio_matrix = tmp_overlay.pivot(index=id_to, columns=id_from, values='ratio')
